@@ -1,0 +1,32 @@
+html, body {
+    height: 100%;
+}
+
+html {
+    display: table;
+    margin: auto;
+}
+
+body {
+    display: table-cell;
+    vertical-align:top;
+}
+
+input{
+    margin-bottom: 20px;
+}
+textarea{
+    margin-bottom: 20px;
+}
+td{
+    padding-right: 15px;
+}
+ td{
+    border: 1px solid rgb(0, 0, 0);
+} 
+.alert-message-error{
+    color:red;
+}
+.alert-message-success{
+    color: green;
+}

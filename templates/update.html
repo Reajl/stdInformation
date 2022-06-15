@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html lang="ru">
+  <head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.min.css" rel="stylesheet" 
+    integrity="sha384-0evHe/X+R7YkIZDRvuzKMRqM+OrBnVFBL6DOitfPri4tjfHxaWutUpFmBp4vmVor" crossorigin="anonymous">
+    <link rel="stylesheet"  type="text/css" href="{{url_for('.static', filename='style.css')}}">
+    <meta charset="UTF-8">
+    <title>Редактирование</title>
+
+  </head>
+  <body>
+    <header>
+     
+      <nav>
+       
+      </nav>
+    </header>
+    <main>
+      <section>
+        <h3>Информация о студенте</h3> <br>
+
+      </section>
+      
+      <form action="/update/{{student.id}}" method="POST">
+       
+        {% block content %}
+        
+            Имя <br>
+            <input type="text" name="name" required value="{{student.name}}"> <br>
+            Адрес <br>
+            <textarea type="text" name="address" required >{{student.address}}</textarea> <br>
+            Город<br>
+            <input type="text" name="city" required value="{{student.city}}"> <br>
+            Номер пропуска<br>
+            <input type="text" name="pin" required value="{{student.pin}}"> <br>
+            <input type="submit" value="submit"><br>
+        
+      </form>
+      {% endblock %}
+            <a href="/">Назад</a>
+    </main>
+    <aside>
+   
+    </aside>
+    <footer>
+     
+    </footer>
+  </body>
+</html>
