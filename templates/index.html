@@ -11,15 +11,22 @@
   </head>
   <body>
     <header>
+      
       <nav>
       </nav>
     </header>
     <main>
+      {% block content %}
+    Вы вошли как - {{ current_user.username }}
+    <a href="/logout">Выйти</a>
+    
+    
+{% endblock %}
       <section>
         <h1>Журнал студентов</h1>
       </section>
       <a href="/add">Записать нового студента</a><br>
-      <a href="/list">Показать список студентов</a>
+      <a href="/list">Показать список студентов</a><br>
     </main>
     <aside>
     </aside>

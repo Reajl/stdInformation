@@ -1,8 +1,10 @@
 import os
-from distutils.util import execute
-import sqlite3
-from flask import Flask, flash, redirect, render_template, request, session, url_for
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, flash, redirect, render_template, request, session
+from models import db
+from webforms import LoginForm, RegisterForm
+from models import Users,Students
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import login_user, LoginManager, login_required, logout_user, current_user
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 app=Flask(__name__)
@@ -12,28 +14,54 @@ app.config['SQLALCHEMY_DATABASE_URI'] =\
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = b'_5#y2L"F4Q8z\n\xec]/'
 
-db = SQLAlchemy(app)
+db.init_app(app)
+login_manager=LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.login_message = "Необходимо авторизоваться"
 
-
-class Students(db.Model):
-    id=db.Column(db.Integer,primary_key=True)
-    name=db.Column(db.Text)
-    address=db.Column(db.Text)
-    city=db.Column(db.Text)
-    pin=db.Column(db.Text)
-
-    def __repr__(self):
-        return f'<Student {self.name}>'
-    # constructor for the model
-    def __init__(self, name, address, city, pin):
-      self.name = name
-      self.address = address
-      self.city = city
-      self.pin = pin
+@login_manager.user_loader
+def load_user(user_id):
+    return Users.query.get(int(user_id))
 
 @app.route('/')
+@login_required
 def index():
     return render_template('index.html')
+
+@app.route('/register',methods=['GET','POST'])
+def register():
+    form=RegisterForm()
+    if form.validate_on_submit():
+        hashed_password=generate_password_hash(form.password.data,method='sha256')
+        new_user=Users(username=form.username.data,password=hashed_password)
+        db.session.add(new_user)
+        db.session.commit()
+        return redirect('/')
+    return render_template('register.html',form=form)
+
+@app.route('/login',methods=['GET','POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect('/')
+    form=LoginForm()
+    if form.validate_on_submit():
+        user=Users.query.filter_by(username=form.username.data).first()
+        if user:
+            if check_password_hash(user.password,form.password.data):
+                login_user(user,remember=form.remember.data)
+                return redirect('/')
+        flash('Неправильный логин или пароль')
+        return  render_template('login.html',form=form)
+                
+    return render_template('login.html',form=form)
+
+@app.route ('/logout')
+@login_required
+def logout():
+    logout_user()
+    session['username']=None
+    return redirect('/')
 
 @app.route('/add')
 def new_student():
@@ -58,18 +86,17 @@ def addstd():
     #         msg="Ошибка"
     #     finally:
     #        return render_template ("register.html", msg=msg)
-
-    #   q = db.session.query(Students).filter(Students.pin==request.form['pin'])
-    #   if db.session.query(q.exists()).scalar():
-    #     msg="Студент уже был добавлен"
+    #       q = db.session.query(Students).filter(Students.pin==request.form['pin'])
+    #       if db.session.query(q.exists()).scalar():
+    #            msg="Студент уже был добавлен"
     if request.method=='POST':
         student=Students(
         request.form['name'],
         request.form['address'],
         request.form['city'],
         request.form['pin'])
+ 
         try:
-                # if the pass number is already entered in the database, then display a notification (the number must be individual)
             q = db.session.query(Students).filter(Students.pin==request.form['pin'])
             if db.session.query(q.exists()).scalar():
                 flash('Студент уже был добавлен','error')
@@ -85,6 +112,7 @@ def addstd():
 
 
 @app.route('/list')
+@login_required
 def list():
    # con=sqlite3.connect("database.db")
    # con.row_factory=sqlite3.Row
@@ -117,8 +145,6 @@ def update(id):
         student.address=request.form['address']
         student.city=request.form['city']
         student.pin=request.form['pin']
-        
-        
         db.session.commit()
         return redirect('/list')
     else:
